@@ -577,7 +577,7 @@ export default function App() {
             {lightOn && lightOff && (
               <div className="bg-green-900/50 border border-green-500 rounded-xl p-4 text-center">
                 <p className="text-green-400 text-lg">
-                  ⏱️ Calculatedstrong className-white text-2xl">{calcHours(lightOn, lightOff)} hours</strong>
+                  ⏱️ Calculated: <strong className="text-white text-2xl">{calcHours(lightOn, lightOff)} hours</strong>
                   {(() => {
                     const [onH, onM] = lightOn.split(':').map(Number);
                     const [offH, offM] = lightOff.split(':').map(Number);
@@ -634,22 +634,7 @@ export default function App() {
                       contentStyle={{ backgroundColor: '#1F2937', border: 'none', borderRadius: '8px', color: '#fff' }}
                     />
                     <ReferenceLine y={16} stroke="#EF4444" strokeDasharray="5 5" />
-                    <Line type="monotone" dataKey="hours" stroke="#EAB308" strokeWidth={2} dot={{ fill: '#EAB308' }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="bg-gray-800 rounded-2xl p-6">
-          <h2 className="text-xl font-bold mb-4">📋 Reports ({filteredReports.length})</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-700 text-gray-400">
-                  <th className="text-left p-3">Date</th>
-                  <th className="text-left p-3">ON</th>
+                    <Line type="monotone" dataKey="hours" stroke="#EAB308" strokeWidth={2} dot={{ fill: '#="text-left p-3">ON</th>
                   <th className="text-left p-3">OFF</th>
                   <th className="text-left p-3">Hours</th>
                   <th className="text-left p-3">Reporter</th>
@@ -677,28 +662,17 @@ export default function App() {
                       <td className="p-3">
                         <button
                           onClick={() => handleDeleteReport(r.id)}
-                          className="bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold hover:bg-red-500 transition"
-                        >
-                          🗑️ Delete
-                        </button>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {showExport && (
-          <div id="pdf-content" style={{ display: 'block', position: 'fixed', left: 0, top: 0, width: '100%', background: 'white', color: 'black', padding: 40, zIndex: 9999 }}>
-            <div style={{ maxWidth: 800, margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
-              <h1 style={{ textAlign: 'center', fontSize: 24 }}>⚡ Arepo Light Tracker — Power Supply Audit Report</h1>
+                          className="bg-red-600 text-white px-3 py-1 rounded-lg text-xs font24 }}>⚡ Arepo Light Tracker — Power Supply Audit Report</h1>
               <p style={{ textAlign: 'center', color: '#666' }}>Generated: {new Date().toLocaleDateString()}</p>
               <hr style={{ margin: '20px 0' }} />
               
               <h2>Summary</h2>
-              <p>Contracted: 16 hours/day</
+              <p>Contracted: 16 hours/day</p>
+              <p>Actual Average: {avgAll} hours/day</p>
+              <p>Shortfall: {(16 - parseFloat(avgAll)).toFixed(1)} hours/day</p>
+              <p>Total Reports: {totalReports}</p>
+              <p>Week Average: {weekAvg} hours/day</p>
+              
               <hr style={{ margin: '20px 0' }} />
               <h2>All Reports</h2>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
