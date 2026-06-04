@@ -1,4 +1,3 @@
-cat > src/App.jsx << 'ENDOFFILE'
 import { useState, useEffect } from 'react';
 import { collection, addDoc, query, getDocs, orderBy, limit, where, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
 import { signInAnonymously, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'firebase/auth';
@@ -489,7 +488,7 @@ export default function App() {
       <div className="max-w-6xl mx-auto p-4 space-y-6">
         <div className="bg-gradient-to-r from-yellow-600 to-orange-600 rounded-2xl p-6 text-center">
           <p className="text-sm opacity-80">TODAY'S AVERAGE</p>
-          <p className="text-5xl font-bold my-2">{todayAvg}h</p>
+          <p className="text-5xl font-bold my-2">{todayAvg}h</
           <p className="text-lg">
             Target: <strong>16h</strong>
             {parseFloat(todayAvg) < 16 && (
@@ -581,16 +580,7 @@ export default function App() {
                 <p className="text-green-400 text-lg">
                   ⏱️ Calculated: <strong className="text-white text-2xl">{calcHours(lightOn, lightOff)} hours</strong>
                   {(() => {
-                    const [onH, onM] = lightOn.split(':').map(Number);
-                    const [offH, offM] = lightOff.split(':').map(Number);
-                    const onMin = onH * 60 + onM;
-                    const offMin = offH * 60 + offM;
-                    if (offMin <= onMin) {
-                      return <span className="block text-yellow-300 mt-2">⚠️ This crosses midnight - will be split into two days</span>;
-                    }
-                    return null;
-                  })()}
-                </p>
+                    constp>
               </div>
             )}
 
@@ -624,18 +614,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className="bg-gray-800 rounded-2xl p-6">
-              <h2 className="text-xl font-bold mb-4">📈 Trend</h2>
-              <div style={{ width: '100%', height: 250 }}>
-                <ResponsiveContainer>
-                  <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis dataKey="date" stroke="#9CA3AF" fontSize={12} />
-                    <YAxis stroke="#9CA3AF" fontSize={12} domain={[0, 20]} />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: '#1F2937', border: 'none', borderRadius: '8px', color: '#fff' }}
-                    />
-                    <ReferenceLine y={16} stroke="#EF4444" strokeDasharray="5 5" />
+            <div className="bg-gray-800 rounded-array="5 5" />
                     <Line type="monotone" dataKey="hours" stroke="#EAB308" strokeWidth={2} dot={{ fill: '#EAB308' }} />
                   </LineChart>
                 </ResponsiveContainer>
@@ -666,22 +645,7 @@ export default function App() {
                     <td className="p-3">{r.date}</td>
                     <td className="p-3">{r.lightOn}</td>
                     <td className="p-3">{r.lightOff}</td>
-                    <td className="p-3 font-bold text-yellow-400">{r.durationHours}h</td>
-                    <td className="p-3 text-gray-400">{r.reporterName}</td>
-                    <td className="p-3 text-gray-500 max-w-[200px] truncate">{r.notes || '-'}</td>
-                    <td className="p-3">
-                      {parseFloat(r.durationHours) >= 16
-                        ? <span className="text-green-400">✅</span>
-                        : <span className="text-red-400">❌ -{(16 - r.durationHours).toFixed(1)}h</span>
-                      }
-                    </td>
-                    {isAdmin && (
-                      <td className="p-3">
-                        <button
-                          onClick={() => handleDeleteReport(r.id)}
-                          className="bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold hover:bg-red-500 transition"
-                        >
-                          🗑️ Delete
+                    <td className="p-3 font-bold text-yellow-400">{r.duration Delete
                         </button>
                       </td>
                     )}
@@ -739,4 +703,3 @@ export default function App() {
     </div>
   );
 }
-ENDOFFILE
