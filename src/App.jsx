@@ -488,7 +488,7 @@ export default function App() {
       <div className="max-w-6xl mx-auto p-4 space-y-6">
         <div className="bg-gradient-to-r from-yellow-600 to-orange-600 rounded-2xl p-6 text-center">
           <p className="text-sm opacity-80">TODAY'S AVERAGE</p>
-          <p className="text-5xl font-bold my-2">{todayAvg}h</
+          <p className="text-5xl font-bold my-2">{todayAvg}h</p>
           <p className="text-lg">
             Target: <strong>16h</strong>
             {parseFloat(todayAvg) < 16 && (
@@ -558,17 +558,7 @@ export default function App() {
                 <input
                   type="time"
                   value={lightOn}
-                  onChange={e => setLightOn(e.target.value)}
-                  className="w-full bg-gray-700 p-3 rounded-xl text-white"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Light OFF ⏰</label>
-                <input
-                  type="time"
-                  value={lightOff}
-                  onChange={e => setLightOff(e.target.value)}
+                  onChange)}
                   className="w-full bg-gray-700 p-3 rounded-xl text-white"
                   required
                 />
@@ -580,7 +570,16 @@ export default function App() {
                 <p className="text-green-400 text-lg">
                   ⏱️ Calculated: <strong className="text-white text-2xl">{calcHours(lightOn, lightOff)} hours</strong>
                   {(() => {
-                    constp>
+                    const [onH, onM] = lightOn.split(':').map(Number);
+                    const [offH, offM] = lightOff.split(':').map(Number);
+                    const onMin = onH * 60 + onM;
+                    const offMin = offH * 60 + offM;
+                    if (offMin <= onMin) {
+                      return <span className="block text-yellow-300 mt-2">⚠️ This crosses midnight - will be split into two days</span>;
+                    }
+                    return null;
+                  })()}
+                </p>
               </div>
             )}
 
@@ -598,23 +597,21 @@ export default function App() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-gray-800 rounded-2xl p-6">
               <h2 className="text-xl font-bold mb-4">📊 Hours Tracked</h2>
+              <div style={{ width
+            </div>
+
+            <div className="bg-gray-800 rounded-2xl p-6">
+              <h2 className="text-xl font-bold mb-4">📈 Trend</h2>
               <div style={{ width: '100%', height: 250 }}>
                 <ResponsiveContainer>
-                  <BarChart data={chartData}>
+                  <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                     <XAxis dataKey="date" stroke="#9CA3AF" fontSize={12} />
                     <YAxis stroke="#9CA3AF" fontSize={12} domain={[0, 20]} />
                     <Tooltip
                       contentStyle={{ backgroundColor: '#1F2937', border: 'none', borderRadius: '8px', color: '#fff' }}
                     />
-                    <ReferenceLine y={16} stroke="#EF4444" strokeDasharray="5 5" label={{ value: 'Target 16h', fill: '#EF4444' }} />
-                    <Bar dataKey="hours" fill="#EAB308" radius={[6, 6, 0, 0]} name="Hours" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            <div className="bg-gray-800 rounded-array="5 5" />
+                    <ReferenceLine y={16} stroke="#EF4444" strokeDasharray="5 5" />
                     <Line type="monotone" dataKey="hours" stroke="#EAB308" strokeWidth={2} dot={{ fill: '#EAB308' }} />
                   </LineChart>
                 </ResponsiveContainer>
@@ -632,20 +629,21 @@ export default function App() {
                   <th className="text-left p-3">Date</th>
                   <th className="text-left p-3">ON</th>
                   <th className="text-left p-3">OFF</th>
-                  <th className="text-left p-3">Hours</th>
-                  <th className="text-left p-3">Reporter</th>
-                  <th className="text-left p-3">Notes</th>
-                  <th className="text-left p-3">Status</th>
-                  {isAdmin && <th className="text-left p-3">Actions</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredReports.slice(0, 50).map(r => (
-                  <tr key={r.id} className="border-b border-gray-700/50 hover:bg-gray-700/30">
-                    <td className="p-3">{r.date}</td>
-                    <td className="p-3">{r.lightOn}</td>
-                    <td className="p-3">{r.lightOff}</td>
-                    <td className="p-3 font-bold text-yellow-400">{r.duration Delete
+                  <th className="r.reporterName}</td>
+                    <td className="p-3 text-gray-500 max-w-[200px] truncate">{r.notes || '-'}</td>
+                    <td className="p-3">
+                      {parseFloat(r.durationHours) >= 16
+                        ? <span className="text-green-400">✅</span>
+                        : <span className="text-red-400">❌ -{(16 - r.durationHours).toFixed(1)}h</span>
+                      }
+                    </td>
+                    {isAdmin && (
+                      <td className="p-3">
+                        <button
+                          onClick={() => handleDeleteReport(r.id)}
+                          className="bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold hover:bg-red-500 transition"
+                        >
+                          🗑️ Delete
                         </button>
                       </td>
                     )}
@@ -665,10 +663,7 @@ export default function App() {
               
               <h2>Summary</h2>
               <p>Contracted: 16 hours/day</p>
-              <p>Actual Average: {avgAll} hours/day</p>
-              <p>Shortfall: {(16 - parseFloat(avgAll)).toFixed(1)} hours/day</p>
-              <p>Total Reports: {totalReports}</p>
-              <p>Week Average: {weekAvg} hours/day</p>
+              <p/day</p>
               
               <hr style={{ margin: '20px 0' }} />
               <h2>All Reports</h2>
