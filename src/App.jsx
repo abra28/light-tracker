@@ -122,7 +122,6 @@ export default function App() {
     const onMin = onH * 60 + onM;
     const offMin = offH * 60 + offM;
     
-    // Check for duplicate exact time entries (same on/off times)
     const duplicateCheck = await getDocs(
       query(collection(db, 'reports'), where('date', '==', date))
     );
@@ -147,7 +146,7 @@ export default function App() {
         lightOff,
         durationHours: parseFloat(hours),
         reporterName: name || 'Anonymous',
-        notes: notes,
+        notes,
         createdAt: new Date().toISOString()
       }];
     } else {
@@ -487,7 +486,7 @@ export default function App() {
 
       <div className="max-w-6xl mx-auto p-4 space-y-6">
         <div className="bg-gradient-to-r from-yellow-600 to-orange-600 rounded-2xl p-6 text-center">
-          <p className="text-sm opacity-80">TODAY'S AVERAGE</p>
+          <p className="text-sm opacity-80">TODAY&apos;S AVERAGE</p>
           <p className="text-5xl font-bold my-2">{todayAvg}h</p>
           <p className="text-lg">
             Target: <strong>16h</strong>
@@ -614,7 +613,15 @@ export default function App() {
                     <XAxis dataKey="date" stroke="#9CA3AF" fontSize={12} />
                     <YAxis stroke="#9CA3AF" fontSize={12} domain={[0, 20]} />
                     <Tooltip
-                      contentStyle={{
+                      contentStyle={{ backgroundColor: '#1F2937', border: '
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="bg-gray-800 rounded-2xl6">
+              <h2 className="text-xl font-bold mb-4">📈 Trend</h2>
+              <div style={{ width: '100%', height: 250 }}>
+                <ResponsiveContainer>
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                     <XAxis dataKey="date" stroke="#9CA3AF" fontSize={12} />
@@ -639,12 +646,13 @@ export default function App() {
                 <tr className="border-b border-gray-700 text-gray-400">
                   <th className="text-left p-3">Date</th>
                   <th className="text-left p-3">ON</th>
-                  <th className="text-left p-3">OFF</th>
-                  <th className="text-left p-3">Hours</th>
-                  <th className="text-left p-3">Reporter</th>
-                  <th className="text-left p-3">Notes</th>
-                  <th className="text-left p-3">Status</th>
-                  {isAdmin && <th-[200px] truncate">{r.notes || '-'}</td>
+                  <th className="text-left p-3">:bg-gray-700/30">
+                    <td className="p-3">{r.date}</td>
+                    <td className="p-3">{r.lightOn}</td>
+                    <td className="p-3">{r.lightOff}</td>
+                    <td className="p-3 font-bold text-yellow-400">{r.durationHours}h</td>
+                    <td className="p-3 text-gray-400">{r.reporterName}</td>
+                    <td className="p-3 text-gray-500 max-w-[200px] truncate">{r.notes || '-'}</td>
                     <td className="p-3">
                       {parseFloat(r.durationHours) >= 16
                         ? <span className="text-green-400">✅</span>
@@ -671,14 +679,7 @@ export default function App() {
         {showExport && (
           <div id="pdf-content" style={{ display: 'block', position: 'fixed', left: 0, top: 0, width: '100%', background: 'white', color: 'black', padding: 40, zIndex: 9999 }}>
             <div style={{ maxWidth: 800, margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
-              <h1 style={{ textAlign: 'center', fontSize: 24 }}>⚡ Arepo Light Tracker — Power Supply Audit Report</h1>
-              <p style={{ textAlign: 'center', color: '#666' }}>Generated: {new Date().toLocaleDateString()}</p>
-              <hr style={{ margin: '20px 0' }} />
-              
-              <h2>Summary</h2>
-              <p>Contracted: 16 hours/day</p>
-              <p>Actual Average: {avgAll} hours/day</p>
-              <p>Shortfall: {(16 -}</p>
+              <h1 style={{ textAlign: 'center', fontSize: 24 }}>>Total Reports: {totalReports}</p>
               <p>Week Average: {weekAvg} hours/day</p>
               
               <hr style={{ margin: '20px 0' }} />
