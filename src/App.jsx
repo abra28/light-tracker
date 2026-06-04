@@ -558,7 +558,17 @@ export default function App() {
                 <input
                   type="time"
                   value={lightOn}
-                  onChange)}
+                  onChange={e => setLightOn(e.target.value)}
+                  className="w-full bg-gray-700 p-3 rounded-xl text-white"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Light OFF ⏰</label>
+                <input
+                  type="time"
+                  value={lightOff}
+                  onChange={e => setLightOff(e.target.value)}
                   className="w-full bg-gray-700 p-3 rounded-xl text-white"
                   required
                 />
@@ -597,13 +607,14 @@ export default function App() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-gray-800 rounded-2xl p-6">
               <h2 className="text-xl font-bold mb-4">📊 Hours Tracked</h2>
-              <div style={{ width
-            </div>
-
-            <div className="bg-gray-800 rounded-2xl p-6">
-              <h2 className="text-xl font-bold mb-4">📈 Trend</h2>
               <div style={{ width: '100%', height: 250 }}>
                 <ResponsiveContainer>
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis dataKey="date" stroke="#9CA3AF" fontSize={12} />
+                    <YAxis stroke="#9CA3AF" fontSize={12} domain={[0, 20]} />
+                    <Tooltip
+                      contentStyle={{
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                     <XAxis dataKey="date" stroke="#9CA3AF" fontSize={12} />
@@ -629,8 +640,11 @@ export default function App() {
                   <th className="text-left p-3">Date</th>
                   <th className="text-left p-3">ON</th>
                   <th className="text-left p-3">OFF</th>
-                  <th className="r.reporterName}</td>
-                    <td className="p-3 text-gray-500 max-w-[200px] truncate">{r.notes || '-'}</td>
+                  <th className="text-left p-3">Hours</th>
+                  <th className="text-left p-3">Reporter</th>
+                  <th className="text-left p-3">Notes</th>
+                  <th className="text-left p-3">Status</th>
+                  {isAdmin && <th-[200px] truncate">{r.notes || '-'}</td>
                     <td className="p-3">
                       {parseFloat(r.durationHours) >= 16
                         ? <span className="text-green-400">✅</span>
@@ -663,7 +677,9 @@ export default function App() {
               
               <h2>Summary</h2>
               <p>Contracted: 16 hours/day</p>
-              <p/day</p>
+              <p>Actual Average: {avgAll} hours/day</p>
+              <p>Shortfall: {(16 -}</p>
+              <p>Week Average: {weekAvg} hours/day</p>
               
               <hr style={{ margin: '20px 0' }} />
               <h2>All Reports</h2>
