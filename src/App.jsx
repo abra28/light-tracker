@@ -44,7 +44,7 @@ function splitReport(date, onTime, offTime, durationHours, reporterName, notes) 
       lightOff: '23:59',
       durationHours: parseFloat(todayDuration.toFixed(1)),
       reporterName,
-      notes: notes + ' (Today portion)',
+      notes,
       createdAt: new Date().toISOString()
     },
     {
@@ -53,7 +53,7 @@ function splitReport(date, onTime, offTime, durationHours, reporterName, notes) 
       lightOff: offTime,
       durationHours: parseFloat(tomorrowDuration.toFixed(1)),
       reporterName,
-      notes: notes + ' (Tomorrow portion)',
+      notes,
       createdAt: new Date().toISOString()
     }
   ];
@@ -78,6 +78,7 @@ export default function App() {
   const [exportStartDate, setExportStartDate] = useState('');
   const [exportEndDate, setExportEndDate] = useState('');
   const [showExportDialog, setShowExportDialog] = useState(false);
+  const [noLight, setNoLight] = useState(false);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
@@ -112,6 +113,40 @@ export default function App() {
 
   async function submitReport(e) {
     e.preventDefault();
+
+    if (noLight) {
+      setLoading(true);
+      const duplicateCheck = await getDocs(
+        query(collection(db, 'reports'), where('date', '==', date))
+      );
+      const exactDuplicate = duplicateCheck.docs.some(doc => {
+        const data = doc.data();
+        return data.lightOn === '-' && data.lightOff === '-';
+      });
+      
+      if (exactDuplicate) {
+        setDuplicateDate(`${date} (No Light)`);
+        setShowDuplicateWarning(true);
+        setLoading(false);
+        return;
+      }
+
+      await addDoc(collection(db, 'reports'), {
+        date,
+        lightOn: '-',
+        lightOff: '-',
+        durationHours: 0,
+        reporterName: name || 'Anonymous',
+        notes,
+        createdAt: new Date().toISOString()
+      });
+
+      setNotes('');
+      setNoLight(false);
+      setLoading(false);
+      return;
+    }
+
     if (!lightOn || !lightOff) return;
 
     setLoading(true);
@@ -285,22 +320,28 @@ export default function App() {
       target: 16
     }));
 
+  const groupedReportsArray = Object.values(groupedByDate).sort((a, b) => {
+    return new Date(b.date) - new Date(a.date);
+  });
+
   const today = new Date().toISOString().slice(0, 10);
   const todayGrouped = groupedByDate[today];
-  const todayAvg = todayGrouped 
-    ? (todayGrouped.totalHours / todayGrouped.reports).toFixed(1)
+  const todayTotal = todayGrouped 
+    ? todayGrouped.totalHours.toFixed(1)
     : '0.0';
 
-  const totalReports = filteredReports.length;
-  const avgAll = totalReports > 0
-    ? (filteredReports.reduce((s, r) => s + parseFloat(r.durationHours), 0) / totalReports).toFixed(1)
+  const totalDays = groupedReportsArray.length;
+  
+  const allDays = Object.values(groupedByDate);
+  const avgAll = allDays.length > 0
+    ? (allDays.reduce((s, r) => s + r.totalHours, 0) / allDays.length).toFixed(1)
     : '0.0';
 
   const weekAgo = new Date();
   weekAgo.setDate(weekAgo.getDate() - 7);
-  const weekReports = filteredReports.filter(r => new Date(r.date) >= weekAgo);
-  const weekAvg = weekReports.length > 0
-    ? (weekReports.reduce((s, r) => s + parseFloat(r.durationHours), 0) / weekReports.length).toFixed(1)
+  const weekDays = allDays.filter(r => new Date(r.date) >= weekAgo);
+  const weekAvg = weekDays.length > 0
+    ? (weekDays.reduce((s, r) => s + r.totalHours, 0) / weekDays.length).toFixed(1)
     : '0.0';
 
   if (!user) {
@@ -486,26 +527,26 @@ export default function App() {
 
       <div className="max-w-6xl mx-auto p-4 space-y-6">
         <div className="bg-gradient-to-r from-yellow-600 to-orange-600 rounded-2xl p-6 text-center">
-          <p className="text-sm opacity-80">TODAY'S AVERAGE</p>
-          <p className="text-5xl font-bold my-2">{todayAvg}h</p>
+          <p className="text-sm opacity-80">TODAY'S TOTAL</p>
+          <p className="text-5xl font-bold my-2">{todayTotal}h</p>
           <p className="text-lg">
             Target: <strong>16h</strong>
-            {parseFloat(todayAvg) < 16 && (
-              <span className="ml-2 text-red-200">❌ Short by {(16 - parseFloat(todayAvg)).toFixed(1)}h</span>
+            {parseFloat(todayTotal) < 16 && (
+              <span className="ml-2 text-red-200">❌ Short by {(16 - parseFloat(todayTotal)).toFixed(1)}h</span>
             )}
-            {parseFloat(todayAvg) >= 16 && (
+            {parseFloat(todayTotal) >= 16 && (
               <span className="ml-2 text-green-200">✅ Target met!</span>
             )}
           </p>
           <div className="flex justify-center gap-6 mt-4 text-sm">
             <div>
-              <span className="opacity-70">Today:</span> <strong>{todayGrouped ? todayGrouped.reports : 0} reports</strong>
+              <span className="opacity-70">Today:</span> <strong>{todayGrouped ? todayGrouped.reports : 0} entries</strong>
             </div>
             <div>
               <span className="opacity-70">Week Avg:</span> <strong>{weekAvg}h</strong>
             </div>
             <div>
-              <span className="opacity-70">Total:</span> <strong>{totalReports}</strong>
+              <span className="opacity-70">Days:</span> <strong>{totalDays}</strong>
             </div>
           </div>
         </div>
@@ -551,30 +592,51 @@ export default function App() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Light ON ⏰</label>
-                <input
-                  type="time"
-                  value={lightOn}
-                  onChange={e => setLightOn(e.target.value)}
-                  className="w-full bg-gray-700 p-3 rounded-xl text-white"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Light OFF ⏰</label>
-                <input
-                  type="time"
-                  value={lightOff}
-                  onChange={e => setLightOff(e.target.value)}
-                  className="w-full bg-gray-700 p-3 rounded-xl text-white"
-                  required
-                />
-              </div>
+            <div className="flex items-center gap-3 bg-gray-700/50 p-3 rounded-xl">
+              <input
+                type="checkbox"
+                id="noLight"
+                checked={noLight}
+                onChange={e => {
+                  setNoLight(e.target.checked);
+                  if (e.target.checked) {
+                    setLightOn('');
+                    setLightOff('');
+                  }
+                }}
+                className="w-5 h-5 rounded bg-gray-600 border-gray-500 text-yellow-500 focus:ring-yellow-500 cursor-pointer"
+              />
+              <label htmlFor="noLight" className="text-gray-300 cursor-pointer select-none">
+                ⚠️ No light at all today
+              </label>
             </div>
 
-            {lightOn && lightOff && (
+            {!noLight && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Light ON ⏰</label>
+                  <input
+                    type="time"
+                    value={lightOn}
+                    onChange={e => setLightOn(e.target.value)}
+                    className="w-full bg-gray-700 p-3 rounded-xl text-white"
+                    required={!noLight}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Light OFF ⏰</label>
+                  <input
+                    type="time"
+                    value={lightOff}
+                    onChange={e => setLightOff(e.target.value)}
+                    className="w-full bg-gray-700 p-3 rounded-xl text-white"
+                    required={!noLight}
+                  />
+                </div>
+              </div>
+            )}
+
+            {!noLight && lightOn && lightOff && (
               <div className="bg-green-900/50 border border-green-500 rounded-xl p-4 text-center">
                 <p className="text-green-400 text-lg">
                   ⏱️ Calculated <strong className="text-white text-2xl">{calcHours(lightOn, lightOff)} hours</strong>
@@ -592,12 +654,20 @@ export default function App() {
               </div>
             )}
 
+            {noLight && (
+              <div className="bg-red-900/50 border border-red-500 rounded-xl p-4 text-center">
+                <p className="text-red-300 text-lg">
+                  ⚠️ No light will be recorded for <strong>{date}</strong> (0 hours)
+                </p>
+              </div>
+            )}
+
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || (!noLight && (!lightOn || !lightOff))}
               className="w-full bg-yellow-500 text-black font-bold py-4 rounded-xl text-lg hover:bg-yellow-400 disabled:opacity-50 transition"
             >
-              {loading ? '📤 Submitting...' : '✅ Submit Report'}
+              {loading ? '📤 Submitting...' : noLight ? '⚠️ Submit No Light Report' : '✅ Submit Report'}
             </button>
           </form>
         </div>
@@ -643,48 +713,44 @@ export default function App() {
         )}
 
         <div className="bg-gray-800 rounded-2xl p-6">
-          <h2 className="text-xl font-bold mb-4">📋 Reports ({filteredReports.length})</h2>
+          <h2 className="text-xl font-bold mb-4">📋 Daily Summary ({groupedReportsArray.length})</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-700 text-gray-400">
                   <th className="text-left p-3">Date</th>
-                  <th className="text-left p-3">ON</th>
-                  <th className="text-left p-3">OFF</th>
-                  <th className="text-left p-3">Hours</th>
-                  <th className="text-left p-3">Reporter</th>
+                  <th className="text-left p-3">Entries</th>
+                  <th className="text-left p-3">Total Hours</th>
+                  <th className="text-left p-3">Reporters</th>
                   <th className="text-left p-3">Notes</th>
                   <th className="text-left p-3">Status</th>
-                  {isAdmin && <th className="text-left p-3">Actions</th>}
                 </tr>
               </thead>
               <tbody>
-                {filteredReports.slice(0, 50).map(r => (
-                  <tr key={r.id} className="border-b border-gray-700/50 hover:bg-gray-700/30">
-                    <td className="p-3">{r.date}</td>
-                    <td className="p-3">{r.lightOn}</td>
-                    <td className="p-3">{r.lightOff}</td>
-                    <td className="p-3 font-bold text-yellow-400">{r.durationHours}h</td>
-                    <td className="p-3 text-gray-400">{r.reporterName}</td>
-                    <td className="p-3 text-gray-500 max-w-[200px] truncate">{r.notes || '-'}</td>
-                    <td className="p-3">
-                      {parseFloat(r.durationHours) >= 16
-                        ? <span className="text-green-400">✅</span>
-                        : <span className="text-red-400">❌ -{(16 - r.durationHours).toFixed(1)}h</span>
-                      }
-                    </td>
-                    {isAdmin && (
-                      <td className="p-3">
-                        <button
-                          onClick={() => handleDeleteReport(r.id)}
-                          className="bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold hover:bg-red-500 transition"
-                        >
-                          🗑️ Delete
-                        </button>
+                {groupedReportsArray.map(r => {
+                  const dayNotes = [...new Set(r.notes.filter(n => n && n.trim() && !n.includes('portion)')))].join(', ');
+                  return (
+                    <tr key={r.date} className="border-b border-gray-700/50 hover:bg-gray-700/30">
+                      <td className="p-3 font-medium">{r.date}</td>
+                      <td className="p-3 text-gray-400">{r.reports}</td>
+                      <td className="p-3 font-bold text-yellow-400">
+                        {r.totalHours === 0 ? 'None' : `${r.totalHours.toFixed(1)}h`}
                       </td>
-                    )}
-                  </tr>
-                ))}
+                      <td className="p-3 text-gray-400 text-xs">
+                        {Array.from(r.reporters).join(', ')}
+                      </td>
+                      <td className="p-3 text-gray-500 max-w-[200px] truncate">
+                        {dayNotes || '-'}
+                      </td>
+                      <td className="p-3">
+                        {r.totalHours >= 16
+                          ? <span className="text-green-400">✅</span>
+                          : <span className="text-red-400">❌ -{(16 - r.totalHours).toFixed(1)}h</span>
+                        }
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
