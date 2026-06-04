@@ -558,7 +558,7 @@ export default function App() {
                   type="time"
                   value={lightOn}
                   onChange={e => setLightOn(e.target.value)}
-                  className="w-full bg-gray--3 rounded-xl text-white"
+                  className="w-full bg-gray-700 p-3 rounded-xl text-white"
                   required
                 />
               </div>
@@ -577,7 +577,7 @@ export default function App() {
             {lightOn && lightOff && (
               <div className="bg-green-900/50 border border-green-500 rounded-xl p-4 text-center">
                 <p className="text-green-400 text-lg">
-                  ⏱️ Calculated: <strong className="text-white text-2xl">{calcHours(lightOn, lightOff)} hours</strong>
+                  ⏱️ Calculatedstrong className-white text-2xl">{calcHours(lightOn, lightOff)} hours</strong>
                   {(() => {
                     const [onH, onM] = lightOn.split(':').map(Number);
                     const [offH, offM] = lightOff.split(':').map(Number);
@@ -612,7 +612,10 @@ export default function App() {
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                     <XAxis dataKey="date" stroke="#9CA3AF" fontSize={12} />
                     <YAxis stroke="#9CA3AF" fontSize={12} domain={[0, 20]} />
-                    <} />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: '#1F2937', border: 'none', borderRadius: '8px', color: '#fff' }}
+                    />
+                    <ReferenceLine y={16} stroke="#EF4444" strokeDasharray="5 5" label={{ value: 'Target 16h', fill: '#EF4444' }} />
                     <Bar dataKey="hours" fill="#EAB308" radius={[6, 6, 0, 0]} name="Hours" />
                   </BarChart>
                 </ResponsiveContainer>
@@ -645,7 +648,12 @@ export default function App() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-700 text-gray-400">
-                  <th">Notes</th>
+                  <th className="text-left p-3">Date</th>
+                  <th className="text-left p-3">ON</th>
+                  <th className="text-left p-3">OFF</th>
+                  <th className="text-left p-3">Hours</th>
+                  <th className="text-left p-3">Reporter</th>
+                  <th className="text-left p-3">Notes</th>
                   <th className="text-left p-3">Status</th>
                   {isAdmin && <th className="text-left p-3">Actions</th>}
                 </tr>
@@ -683,16 +691,14 @@ export default function App() {
         </div>
 
         {showExport && (
-          <div id="pdf-content" style={{ display: 'p>
+          <div id="pdf-content" style={{ display: 'block', position: 'fixed', left: 0, top: 0, width: '100%', background: 'white', color: 'black', padding: 40, zIndex: 9999 }}>
+            <div style={{ maxWidth: 800, margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
+              <h1 style={{ textAlign: 'center', fontSize: 24 }}>⚡ Arepo Light Tracker — Power Supply Audit Report</h1>
+              <p style={{ textAlign: 'center', color: '#666' }}>Generated: {new Date().toLocaleDateString()}</p>
               <hr style={{ margin: '20px 0' }} />
               
               <h2>Summary</h2>
-              <p>Contracted: 16 hours/day</p>
-              <p>Actual Average: {avgAll} hours/day</p>
-              <p>Shortfall: {(16 - parseFloat(avgAll)).toFixed(1)} hours/day</p>
-              <p>Total Reports: {totalReports}</p>
-              <p>Week Average: {weekAvg} hours/day</p>
-              
+              <p>Contracted: 16 hours/day</
               <hr style={{ margin: '20px 0' }} />
               <h2>All Reports</h2>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
