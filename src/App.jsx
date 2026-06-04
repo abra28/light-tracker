@@ -486,7 +486,7 @@ export default function App() {
 
       <div className="max-w-6xl mx-auto p-4 space-y-6">
         <div className="bg-gradient-to-r from-yellow-600 to-orange-600 rounded-2xl p-6 text-center">
-          <p className="text-sm opacity-80">TODAY&apos;S AVERAGE</p>
+          <p className="text-sm opacity-80">TODAY'S AVERAGE</p>
           <p className="text-5xl font-bold my-2">{todayAvg}h</p>
           <p className="text-lg">
             Target: <strong>16h</strong>
@@ -558,7 +558,7 @@ export default function App() {
                   type="time"
                   value={lightOn}
                   onChange={e => setLightOn(e.target.value)}
-                  className="w-full bg-gray-700 p-3 rounded-xl text-white"
+                  className="w-full bg-gray--3 rounded-xl text-white"
                   required
                 />
               </div>
@@ -612,13 +612,14 @@ export default function App() {
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                     <XAxis dataKey="date" stroke="#9CA3AF" fontSize={12} />
                     <YAxis stroke="#9CA3AF" fontSize={12} domain={[0, 20]} />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: '#1F2937', border: '
+                    <} />
+                    <Bar dataKey="hours" fill="#EAB308" radius={[6, 6, 0, 0]} name="Hours" />
+                  </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
-            <div className="bg-gray-800 rounded-2xl6">
+            <div className="bg-gray-800 rounded-2xl p-6">
               <h2 className="text-xl font-bold mb-4">📈 Trend</h2>
               <div style={{ width: '100%', height: 250 }}>
                 <ResponsiveContainer>
@@ -644,9 +645,14 @@ export default function App() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-700 text-gray-400">
-                  <th className="text-left p-3">Date</th>
-                  <th className="text-left p-3">ON</th>
-                  <th className="text-left p-3">:bg-gray-700/30">
+                  <th">Notes</th>
+                  <th className="text-left p-3">Status</th>
+                  {isAdmin && <th className="text-left p-3">Actions</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {filteredReports.slice(0, 50).map(r => (
+                  <tr key={r.id} className="border-b border-gray-700/50 hover:bg-gray-700/30">
                     <td className="p-3">{r.date}</td>
                     <td className="p-3">{r.lightOn}</td>
                     <td className="p-3">{r.lightOff}</td>
@@ -677,9 +683,14 @@ export default function App() {
         </div>
 
         {showExport && (
-          <div id="pdf-content" style={{ display: 'block', position: 'fixed', left: 0, top: 0, width: '100%', background: 'white', color: 'black', padding: 40, zIndex: 9999 }}>
-            <div style={{ maxWidth: 800, margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
-              <h1 style={{ textAlign: 'center', fontSize: 24 }}>>Total Reports: {totalReports}</p>
+          <div id="pdf-content" style={{ display: 'p>
+              <hr style={{ margin: '20px 0' }} />
+              
+              <h2>Summary</h2>
+              <p>Contracted: 16 hours/day</p>
+              <p>Actual Average: {avgAll} hours/day</p>
+              <p>Shortfall: {(16 - parseFloat(avgAll)).toFixed(1)} hours/day</p>
+              <p>Total Reports: {totalReports}</p>
               <p>Week Average: {weekAvg} hours/day</p>
               
               <hr style={{ margin: '20px 0' }} />
