@@ -79,6 +79,7 @@ export default function App() {
   const [exportEndDate, setExportEndDate] = useState('');
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [noLight, setNoLight] = useState(false);
+  const [expandedDate, setExpandedDate] = useState(null);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
@@ -302,13 +303,15 @@ export default function App() {
         totalHours: 0,
         reports: 0,
         reporters: new Set(),
-        notes: []
+        notes: [],
+        entries: []
       };
     }
     groupedByDate[r.date].totalHours += parseFloat(r.durationHours);
     groupedByDate[r.date].reports += 1;
     groupedByDate[r.date].reporters.add(r.reporterName);
-    if (r.notes) groupedByDate[r.date].notes.push(r.notes);
+    if (r.notes && r.notes.trim()) groupedByDate[r.date].notes.push(r.notes);
+    groupedByDate[r.date].entries.push(r);
   });
 
   const chartData = Object.values(groupedByDate)
@@ -343,6 +346,10 @@ export default function App() {
   const weekAvg = weekDays.length > 0
     ? (weekDays.reduce((s, r) => s + r.totalHours, 0) / weekDays.length).toFixed(1)
     : '0.0';
+
+  function toggleExpand(date) {
+    setExpandedDate(expandedDate === date ? null : date);
+  }
 
   if (!user) {
     return (
@@ -718,6 +725,7 @@ export default function App() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-700 text-gray-400">
+                  <th className="text-left p-3 w-8"></th>
                   <th className="text-left p-3">Date</th>
                   <th className="text-left p-3">Entries</th>
                   <th className="text-left p-3">Total Hours</th>
@@ -728,27 +736,91 @@ export default function App() {
               </thead>
               <tbody>
                 {groupedReportsArray.map(r => {
-                  const dayNotes = [...new Set(r.notes.filter(n => n && n.trim() && !n.includes('portion)')))].join(', ');
+                  const isExpanded = expandedDate === r.date;
+                  const dayNotes = [...new Set(r.notes.filter(n => n && n.trim()))].join(', ');
                   return (
-                    <tr key={r.date} className="border-b border-gray-700/50 hover:bg-gray-700/30">
-                      <td className="p-3 font-medium">{r.date}</td>
-                      <td className="p-3 text-gray-400">{r.reports}</td>
-                      <td className="p-3 font-bold text-yellow-400">
-                        {r.totalHours === 0 ? 'None' : `${r.totalHours.toFixed(1)}h`}
-                      </td>
-                      <td className="p-3 text-gray-400 text-xs">
-                        {Array.from(r.reporters).join(', ')}
-                      </td>
-                      <td className="p-3 text-gray-500 max-w-[200px] truncate">
-                        {dayNotes || '-'}
-                      </td>
-                      <td className="p-3">
-                        {r.totalHours >= 16
-                          ? <span className="text-green-400">✅</span>
-                          : <span className="text-red-400">❌ -{(16 - r.totalHours).toFixed(1)}h</span>
-                        }
-                      </td>
-                    </tr>
+                    <>
+                      <tr 
+                        key={r.date} 
+                        onClick={() => toggleExpand(r.date)}
+                        className="border-b border-gray-700/50 hover:bg-gray-700/30 cursor-pointer transition"
+                      >
+                        <td className="p-3 text-gray-500">
+                          <span className={`inline-block transition-transform ${isExpanded ? 'rotate-90' : ''}`}>
+                            ▶
+                          </span>
+                        </td>
+                        <td className="p-3 font-medium">{r.date}</td>
+                        <td className="p-3 text-gray-400">
+                          <span className="bg-gray-700 px-2 py-1 rounded-md text-xs font-bold">
+                            {r.reports}
+                          </span>
+                        </td>
+                        <td className="p-3 font-bold text-yellow-400">
+                          {r.totalHours === 0 ? 'None' : `${r.totalHours.toFixed(1)}h`}
+                        </td>
+                        <td className="p-3 text-gray-400 text-xs">
+                          {Array.from(r.reporters).join(', ')}
+                        </td>
+                        <td className="p-3 text-gray-500 max-w-[200px] truncate">
+                          {dayNotes || '-'}
+                        </td>
+                        <td className="p-3">
+                          {r.totalHours >= 16
+                            ? <span className="text-green-400">✅</span>
+                            : <span className="text-red-400">❌ -{(16 - r.totalHours).toFixed(1)}h</span>
+                          }
+                        </td>
+                      </tr>
+                      {isExpanded && (
+                        <tr key={`${r.date}-detail`}>
+                          <td colSpan="7" className="p-0">
+                            <div className="bg-gray-900/50 border-l-4 border-yellow-500 m-2 rounded-r-xl overflow-hidden">
+                              <table className="w-full text-xs">
+                                <thead>
+                                  <tr className="bg-gray-800 text-gray-400">
+                                    <th className="text-left p-3 pl-6">ON</th>
+                                    <th className="text-left p-3">OFF</th>
+                                    <th className="text-left p-3">Hours</th>
+                                    <th className="text-left p-3">Reporter</th>
+                                    <th className="text-left p-3">Notes</th>
+                                    {isAdmin && <th className="text-left p-3">Action</th>}
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {r.entries.map(entry => (
+                                    <tr key={entry.id} className="border-b border-gray-800/50 hover:bg-gray-800/30">
+                                      <td className="p-3 pl-6 text-gray-300">{entry.lightOn}</td>
+                                      <td className="p-3 text-gray-300">{entry.lightOff}</td>
+                                      <td className="p-3 font-bold text-yellow-400">
+                                        {entry.durationHours === 0 ? 'None' : `${entry.durationHours}h`}
+                                      </td>
+                                      <td className="p-3 text-gray-400">{entry.reporterName}</td>
+                                      <td className="p-3 text-gray-500 max-w-[200px] truncate">
+                                        {entry.notes || '-'}
+                                      </td>
+                                      {isAdmin && (
+                                        <td className="p-3">
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleDeleteReport(entry.id);
+                                            }}
+                                            className="bg-red-600 text-white px-2 py-1 rounded text-xs font-bold hover:bg-red-500 transition"
+                                          >
+                                            🗑️
+                                          </button>
+                                        </td>
+                                      )}
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
                   );
                 })}
               </tbody>
