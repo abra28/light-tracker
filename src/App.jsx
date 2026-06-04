@@ -1,3 +1,4 @@
+cat > src/App.jsx << 'ENDOFFILE'
 import { useState, useEffect } from 'react';
 import { collection, addDoc, query, getDocs, orderBy, limit, where, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
 import { signInAnonymously, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'firebase/auth';
@@ -40,7 +41,7 @@ function splitReport(date, onTime, offTime, durationHours, reporterName, notes) 
   return [
     {
       date,
-      lightOn,
+      lightOn: onTime,
       lightOff: '23:59',
       durationHours: parseFloat(todayDuration.toFixed(1)),
       reporterName,
@@ -50,7 +51,7 @@ function splitReport(date, onTime, offTime, durationHours, reporterName, notes) 
     {
       date: tomorrow.toISOString().slice(0, 10),
       lightOn: '00:00',
-      lightOff,
+      lightOff: offTime,
       durationHours: parseFloat(tomorrowDuration.toFixed(1)),
       reporterName,
       notes: notes + ' (Tomorrow portion)',
@@ -122,17 +123,21 @@ export default function App() {
     const onMin = onH * 60 + onM;
     const offMin = offH * 60 + offM;
     
-    if (offMin > onMin) {
-      const duplicateCheck = await getDocs(
-        query(collection(db, 'reports'), where('date', '==', date))
-      );
-      
-      if (duplicateCheck.docs.length > 0) {
-        setDuplicateDate(date);
-        setShowDuplicateWarning(true);
-        setLoading(false);
-        return;
-      }
+    // Check for duplicate exact time entries (same on/off times)
+    const duplicateCheck = await getDocs(
+      query(collection(db, 'reports'), where('date', '==', date))
+    );
+    
+    const exactDuplicate = duplicateCheck.docs.some(doc => {
+      const data = doc.data();
+      return data.lightOn === lightOn && data.lightOff === lightOff;
+    });
+    
+    if (exactDuplicate) {
+      setDuplicateDate(`${date} ${lightOn}-${lightOff}`);
+      setShowDuplicateWarning(true);
+      setLoading(false);
+      return;
     }
 
     let reportsToSubmit;
@@ -396,9 +401,9 @@ export default function App() {
       {showDuplicateWarning && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-gray-800 rounded-2xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold mb-4">⚠️ Duplicate Detected</h3>
+            <h3 className="text-xl font-bold mb-4">⚠️ Duplicate Entry</h3>
             <p className="text-gray-300 mb-4">
-              A report already exists for {duplicateDate}. Do you want to:
+              This exact time entry ({duplicateDate}) already exists. Do you want to:
             </p>
             <div className="flex flex-col gap-2">
               <button
@@ -720,7 +725,7 @@ export default function App() {
                       <td style={{ padding: 8, border: '1px solid #555' }}>{r.date}</td>
                       <td style={{ padding: 8, border: '1px solid #555' }}>{r.lightOn}</td>
                       <td style={{ padding: 8, border: '1px solid #555' }}>{r.lightOff}</td>
-                      <td style={{ padding: 8, border: '1-pixel solid #555' }}>{r.durationHours}h</td>
+                      <td style={{ padding: 8, border: '1px solid #555' }}>{r.durationHours}h</td>
                       <td style={{ padding: 8, border: '1px solid #555' }}>{r.reporterName}</td>
                       <td style={{ padding: 8, border: '1px solid #555' }}>{r.notes || ''}</td>
                     </tr>
@@ -734,3 +739,4 @@ export default function App() {
     </div>
   );
 }
+ENDOFFILE
